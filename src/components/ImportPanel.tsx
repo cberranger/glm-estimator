@@ -112,7 +112,7 @@ export function ImportPanel() {
             Import Status
           </CardTitle>
           <CardDescription>
-            Upload directory: <code className="text-xs bg-slate-100 px-1 rounded">{status?.uploadDir || '/home/z/my-project/upload'}</code>
+            Data directory: <code className="text-xs bg-slate-100 px-1 rounded">{status?.uploadDir || './db/json'}</code>
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -120,16 +120,16 @@ export function ImportPanel() {
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
-          ) : status?.exists ? (
+          ) : status?.exists && status.files.length > 0 ? (
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-5 w-5 text-green-500" />
-                <span>Upload directory found</span>
+                <span>Data directory found</span>
                 <Badge variant="secondary">{status.totalFiles} JSON files</Badge>
               </div>
 
               {status.files.length > 0 && (
-                <div className="border rounded-lg divide-y">
+                <div className="border rounded-lg divide-y max-h-64 overflow-auto">
                   {status.files.map((file, index) => (
                     <div key={index} className="flex items-center justify-between p-3">
                       <div className="flex items-center gap-2">
@@ -149,7 +149,7 @@ export function ImportPanel() {
               <div className="flex gap-2">
                 <Button 
                   onClick={runImport} 
-                  disabled={importing || status.files.length === 0}
+                  disabled={importing}
                   className="flex-1"
                 >
                   {importing ? (
@@ -166,10 +166,28 @@ export function ImportPanel() {
                 </Button>
               </div>
             </div>
+          ) : status?.exists ? (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-amber-600">
+                <AlertCircle className="h-5 w-5" />
+                <span>No JSON files found in {status.uploadDir}</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Add .json files to the <code className="text-xs bg-slate-100 px-1 rounded">./db/json/</code> directory and click Refresh.
+              </p>
+            </div>
           ) : (
-            <div className="flex items-center gap-2 text-amber-600">
-              <AlertCircle className="h-5 w-5" />
-              <span>Upload directory not found. Please upload JSON files first.</span>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-amber-600">
+                <AlertCircle className="h-5 w-5" />
+                <span>Data directory not found</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Create the <code className="text-xs bg-slate-100 px-1 rounded">./db/json/</code> directory and add OCR&apos;d JSON files from your cost books.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Expected format: JSON files exported from GLM-OCR containing construction estimating tables.
+              </p>
             </div>
           )}
         </CardContent>
@@ -221,28 +239,28 @@ export function ImportPanel() {
             <div className="p-4 bg-slate-50 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <Badge variant="outline">1</Badge>
-                <span className="font-medium">Upload Files</span>
+                <span className="font-medium">Add Files</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                Place your OCR&apos;d JSON files (.json.txt) in the upload directory
+                Place OCR&apos;d JSON files in <code className="text-xs bg-slate-200 px-1 rounded">./db/json/</code>
               </p>
             </div>
             <div className="p-4 bg-slate-50 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <Badge variant="outline">2</Badge>
-                <span className="font-medium">Verify Files</span>
+                <span className="font-medium">Verify</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                Ensure files are detected in the list above before importing
+                Click Refresh to detect files in the directory
               </p>
             </div>
             <div className="p-4 bg-slate-50 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <Badge variant="outline">3</Badge>
-                <span className="font-medium">Run Import</span>
+                <span className="font-medium">Import</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                Click the Import button to process all JSON files into the database
+                Click Import to load data into the database
               </p>
             </div>
           </div>
