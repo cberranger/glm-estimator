@@ -7,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -233,7 +233,7 @@ model Room {
   updatedAt   DateTime @updatedAt
   
   project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  estimateItems EstimateLineItem[]
+  lineItems   EstimateLineItem[]
 }
 
 // Estimates
@@ -251,6 +251,7 @@ model Estimate {
   totalCost           Float    @default(0)
   profitMargin        Float    @default(0.20)
   taxRate             Float    @default(0.08)
+  notes               String?
   createdBy           String?
   completedAt         DateTime?
   createdAt           DateTime @default(now())

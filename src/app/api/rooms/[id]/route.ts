@@ -14,8 +14,14 @@ export async function GET(
         project: true,
         lineItems: {
           include: {
-            material: true,
-            labor: true,
+            lineItem: {
+              include: {
+                unit: true,
+                workItem: true,
+              },
+            },
+            variant: true,
+            unit: true,
           },
         },
       },

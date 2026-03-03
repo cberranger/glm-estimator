@@ -13,8 +13,14 @@ export async function GET(request: NextRequest) {
         project: true,
         lineItems: {
           include: {
-            material: true,
-            labor: true,
+            lineItem: {
+              include: {
+                unit: true,
+                workItem: true,
+              },
+            },
+            variant: true,
+            unit: true,
           },
         },
       },

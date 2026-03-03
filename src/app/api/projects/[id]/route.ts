@@ -15,8 +15,14 @@ export async function GET(
           include: {
             lineItems: {
               include: {
-                material: true,
-                labor: true,
+                lineItem: {
+                  include: {
+                    unit: true,
+                    workItem: true,
+                  },
+                },
+                variant: true,
+                unit: true,
               },
             },
           },
@@ -25,8 +31,14 @@ export async function GET(
           include: {
             lineItems: {
               include: {
-                material: true,
-                labor: true,
+                lineItem: {
+                  include: {
+                    unit: true,
+                    workItem: true,
+                  },
+                },
+                variant: true,
+                unit: true,
                 room: true,
               },
             },

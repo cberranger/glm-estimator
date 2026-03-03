@@ -167,6 +167,9 @@ export interface Estimate {
   totalCost: number;
   profitMargin: number;
   taxRate: number;
+  subtotal?: number;
+  taxAmount?: number;
+  totalAmount?: number;
   createdBy: string | null;
   completedAt: string | null;
   createdAt: string;
@@ -233,4 +236,41 @@ export interface EstimateSummary {
   profit: number;
   tax: number;
   total: number;
+}
+
+// Additional types for store and page usage
+export interface LineItem {
+  id: string;
+  type?: 'material' | 'labor' | 'equipment';
+  itemType?: 'material' | 'labor' | 'other';
+  category?: string;
+  description?: string;
+  quantity: number;
+  unit?: string | Unit;
+  unitPrice?: number;
+  totalPrice?: number;
+  markup?: number;
+  roomId?: string | null;
+  room?: Room;
+  // Compatibility with EstimateLineItem
+  lineItemId?: string | null;
+  variantId?: string | null;
+  lineTotal?: number;
+}
+
+export interface Material {
+  id: string;
+  name: string;
+  category: string;
+  unit: string;
+  unitPrice: number;
+  description?: string;
+}
+
+export interface Labor {
+  id: string;
+  name: string;
+  trade: string;
+  hourlyRate: number;
+  description?: string;
 }

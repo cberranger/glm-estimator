@@ -11,18 +11,29 @@ export async function GET(
     const estimate = await db.estimate.findUnique({
       where: { id },
       include: {
-        project: {
-          include: {
-            rooms: true,
-          },
-        },
+        project: true,
+        areaModifier: true,
         lineItems: {
           include: {
-            material: true,
-            labor: true,
+            lineItem: {
+              include: {
+                unit: true,
+                workItem: {
+                  include: {
+                    category: {
+                      include: {
+                        division: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            variant: true,
+            unit: true,
             room: true,
           },
-          orderBy: { sortOrder: 'asc' },
+          orderBy: { displayOrder: 'asc' },
         },
       },
     });
@@ -45,37 +56,29 @@ export async function PUT(
     const { id } = await params;
     const data = await request.json();
     
-    // Recalculate totals
-    const subtotal = data.subtotal || 0;
-    const taxAmount = subtotal * (data.taxRate || 0);
-    const profitAmount = subtotal * (data.profitMargin || 0.2);
-    const totalAmount = subtotal + taxAmount + profitAmount;
-    
     const estimate = await db.estimate.update({
       where: { id },
       data: {
-        name: data.name,
-        description: data.description,
-        status: data.status,
-        validUntil: data.validUntil ? new Date(data.validUntil) : null,
-        notes: data.notes,
-        terms: data.terms,
-        subtotal,
-        taxRate: data.taxRate,
-        taxAmount,
-        totalAmount,
+        estimateName: data.name,
+        projectName: data.projectName,
+        projectLocation: data.projectLocation,
+        estimateStatus: data.status,
         profitMargin: data.profitMargin,
+        taxRate: data.taxRate,
+        notes: data.notes,
       },
       include: {
         lineItems: {
           include: {
-            material: true,
-            labor: true,
+            lineItem: true,
+            variant: true,
+            unit: true,
             room: true,
           },
         },
       },
     });
+    
     return NextResponse.json(estimate);
   } catch (error) {
     console.error('Error updating estimate:', error);
@@ -90,9 +93,17 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+    
+    // First delete all line items associated with this estimate
+    await db.estimateLineItem.deleteMany({
+      where: { estimateId: id },
+    });
+    
+    // Then delete the estimate
     await db.estimate.delete({
       where: { id },
     });
+    
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting estimate:', error);

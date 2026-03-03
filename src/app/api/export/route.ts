@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Generate HTML for PDF
-    const html = generateEstimateHTML(estimate);
+    const html = generateEstimateHTML(estimate as EstimateWithIncludes);
     
     return new NextResponse(html, {
       headers: {
@@ -60,50 +60,58 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function generateEstimateHTML(estimate: {
+// Type for estimate with includes - explicitly defined to match Prisma query shape
+type EstimateWithIncludes = {
   id: string;
-  estimateName: string;
-  projectName: string | null;
-  projectLocation: string | null;
-  estimateStatus: string;
+  createdAt: Date;
+  updatedAt: Date;
+  totalCost: number;
   totalMaterialCost: number;
   totalLaborCost: number;
   totalEquipmentCost: number;
-  totalCost: number;
   profitMargin: number;
   taxRate: number;
-  createdAt: Date;
+  notes: string | null;
+  estimateName: string;
+  estimateStatus: string;
+  projectName: string | null;
+  projectLocation: string | null;
   project: {
     name: string;
+    address: string | null;
     clientName: string | null;
     clientEmail: string | null;
     clientPhone: string | null;
-    address: string | null;
+    rooms: { id: string; name: string }[];
   };
-  lineItems: Array<{
-    id: string;
-    quantity: number;
-    lineTotalMaterialCost: number;
-    lineTotalLaborCost: number;
-    lineTotalEquipmentCost: number;
-    lineTotal: number;
-    notes: string | null;
-    lineItem: {
-      description: string;
-      workItem?: {
-        category?: {
-          categoryName: string;
-          division?: {
-            divisionName: string;
-          };
+  lineItems: EstimateLineItemWithIncludes[];
+};
+
+type EstimateLineItemWithIncludes = {
+  id: string;
+  quantity: number;
+  lineTotalMaterialCost: number;
+  lineTotalLaborCost: number;
+  lineTotalEquipmentCost: number;
+  lineTotal: number;
+  notes: string | null;
+  lineItem: {
+    description: string;
+    workItem: {
+      category: {
+        categoryName: string;
+        division: {
+          divisionName: string;
         };
       };
     } | null;
-    variant: { variantName: string } | null;
-    room: { name: string } | null;
-    unit: { unitCode: string; unitName: string } | null;
-  }>;
-}): string {
+  } | null;
+  variant: { variantName: string } | null;
+  room: { name: string } | null;
+  unit: { unitCode: string; unitName: string } | null;
+};
+
+function generateEstimateHTML(estimate: EstimateWithIncludes): string {
   const formatDate = (date: Date) => new Date(date).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',

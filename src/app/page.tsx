@@ -44,7 +44,7 @@ import {
   Check,
   Upload
 } from 'lucide-react';
-import type { Project, Room, LineItemData, LaborCodeData, Estimate, EstimateLineItem, Division, DivisionWithCategories } from '@/lib/types';
+import type { Project, Room, LineItemData, LaborCodeData, Estimate, EstimateLineItem, Division, DivisionWithCategories, LineItem, Material, Labor } from '@/lib/types';
 import { ImportPanel } from '@/components/ImportPanel';
 
 // Dashboard Component
@@ -1337,7 +1337,7 @@ function EstimateBuilder({
   const updateEstimateTotals = async (items: LineItem[]) => {
     if (!estimate) return;
     
-    const subtotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
+    const subtotal = items.reduce((sum, item) => sum + (item.totalPrice ?? 0), 0);
     const taxAmount = subtotal * (estimate.taxRate || 0.08);
     const profitAmount = subtotal * (estimate.profitMargin || 0.2);
     const totalAmount = subtotal + taxAmount + profitAmount;
@@ -1383,8 +1383,9 @@ function EstimateBuilder({
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 
   const groupedItems = lineItems.reduce((acc, item) => {
-    if (!acc[item.category]) acc[item.category] = [];
-    acc[item.category].push(item);
+    const category = item.category || 'Other';
+    if (!acc[category]) acc[category] = [];
+    acc[category].push(item);
     return acc;
   }, {} as Record<string, LineItem[]>);
 
@@ -1468,13 +1469,13 @@ function EstimateBuilder({
                               <div className="flex-1">
                                 <p className="font-medium">{item.description}</p>
                                 <div className="flex gap-4 text-sm text-muted-foreground">
-                                  <span>{item.quantity} {item.unit}</span>
-                                  <span>@ {formatCurrency(item.unitPrice)}</span>
+                                  <span>{item.quantity} {typeof item.unit === 'string' ? item.unit : item.unit?.unitName}</span>
+                                  <span>@ {formatCurrency(item.unitPrice ?? 0)}</span>
                                   {item.room && <span>Room: {item.room.name}</span>}
                                 </div>
                               </div>
                               <div className="flex items-center gap-4">
-                                <span className="font-semibold">{formatCurrency(item.totalPrice)}</span>
+                                <span className="font-semibold">{formatCurrency(item.totalPrice ?? 0)}</span>
                                 <Button
                                   size="sm"
                                   variant="ghost"
@@ -1504,34 +1505,34 @@ function EstimateBuilder({
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Materials</span>
-                    <span>{formatCurrency(lineItems.filter(i => i.itemType === 'material').reduce((s, i) => s + i.totalPrice, 0))}</span>
+                    <span>{formatCurrency(lineItems.filter(i => i.itemType === 'material').reduce((s, i) => s + (i.totalPrice ?? 0), 0))}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Labor</span>
-                    <span>{formatCurrency(lineItems.filter(i => i.itemType === 'labor').reduce((s, i) => s + i.totalPrice, 0))}</span>
+                    <span>{formatCurrency(lineItems.filter(i => i.itemType === 'labor').reduce((s, i) => s + (i.totalPrice ?? 0), 0))}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Other</span>
-                    <span>{formatCurrency(lineItems.filter(i => i.itemType === 'other').reduce((s, i) => s + i.totalPrice, 0))}</span>
+                    <span>{formatCurrency(lineItems.filter(i => i.itemType === 'other').reduce((s, i) => s + (i.totalPrice ?? 0), 0))}</span>
                   </div>
                 </div>
                 <Separator />
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span className="font-medium">{formatCurrency(estimate.subtotal)}</span>
+                  <span className="font-medium">{formatCurrency(estimate.subtotal ?? 0)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Tax ({(estimate.taxRate * 100).toFixed(1)}%)</span>
-                  <span>{formatCurrency(estimate.taxAmount)}</span>
+                  <span>{formatCurrency(estimate.taxAmount ?? 0)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Profit ({(estimate.profitMargin * 100).toFixed(0)}%)</span>
-                  <span>{formatCurrency(estimate.subtotal * estimate.profitMargin)}</span>
+                  <span>{formatCurrency((estimate.subtotal ?? 0) * estimate.profitMargin)}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span className="text-green-600">{formatCurrency(estimate.totalAmount)}</span>
+                  <span className="text-green-600">{formatCurrency(estimate.totalAmount ?? 0)}</span>
                 </div>
               </CardContent>
             </Card>
@@ -1737,7 +1738,7 @@ export default function EstimatingApp() {
     setActiveTab('estimate');
   };
 
-  const handleAddLaborToEstimate = (labor: Labor) => {
+  const handleAddLaborToEstimate = (labor: LaborCodeData) => {
     if (!selectedProject) {
       alert('Please select a project first');
       return;
@@ -1760,7 +1761,7 @@ export default function EstimatingApp() {
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-[95%] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg">
@@ -1790,7 +1791,7 @@ export default function EstimatingApp() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
+      <main className="flex-1 w-[95%] mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-7 lg:w-auto lg:inline-grid">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
@@ -1859,7 +1860,7 @@ export default function EstimatingApp() {
 
       {/* Footer */}
       <footer className="bg-white border-t border-slate-200 py-4 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-[95%] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between text-sm text-slate-500">
             <p>BuildEstimate Pro - Professional Construction Estimating</p>
             <p>Cost Items Database: 10,000+ items</p>
